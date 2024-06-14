@@ -14,21 +14,35 @@ if (!empty($_POST)) {
                                     Todo los campos son obligatorio
                                 </div>';
     } else {
-        $nombre = $_POST['nombre'];
-        $telefono = $_POST['telefono'];
-        $direccion = $_POST['direccion'];
-        $usuario_id = $_SESSION['idUser'];
+        // Asignar los parámetros POST a variables seguras
+        $nombreSeguro = $_POST['nombre'];
+        $telefonoSeguro = $_POST['telefono'];
+        $direccionSeguro = $_POST['direccion'];
+        $usuario_idSeguro = $_SESSION['idUser'];
 
-        $result = 0;
-        $query = mysqli_query($conexion, "SELECT * FROM cliente WHERE nombre = '$nombre'");
-        $result = mysqli_fetch_array($query);
-        if ($result > 0) {
+        // Cambio: Usando prepared statements para prevenir inyección SQL
+        $querySeguro = $conexion->prepare("SELECT * FROM cliente WHERE nombre = ?");
+        $querySeguro->bind_param("s", $nombreSeguro);
+        $querySeguro->execute();
+        $resultSeguro = $querySeguro->get_result();
+
+        // Asignar las variables seguras a las variables originales
+        $nombre = $nombreSeguro;
+        $telefono = $telefonoSeguro;
+        $direccion = $direccionSeguro;
+        $usuario_id = $usuario_idSeguro;
+        
+        if ($resultSeguro->num_rows > 0) {
             $alert = '<div class="alert alert-danger" role="alert">
                                     El cliente ya existe
                                 </div>';
         } else {
-            $query_insert = mysqli_query($conexion, "INSERT INTO cliente(nombre,telefono,direccion, usuario_id) values ('$nombre', '$telefono', '$direccion', '$usuario_id')");
-            if ($query_insert) {
+            // Cambio: Usando prepared statements para prevenir inyección SQL
+            $query_insert_seguro = $conexion->prepare("INSERT INTO cliente(nombre, telefono, direccion, usuario_id) VALUES (?, ?, ?, ?)");
+            $query_insert_seguro->bind_param("sssi", $nombreSeguro, $telefonoSeguro, $direccionSeguro, $usuario_idSeguro);
+            $query_insert_seguro->execute();
+
+            if ($query_insert_seguro->affected_rows > 0) {
                 $alert = '<div class="alert alert-success" role="alert">
                                     Cliente registrado
                                 </div>';
@@ -88,7 +102,6 @@ if (!empty($_POST)) {
             <?php }
             } ?>
         </tbody>
-
     </table>
 </div>
 <div id="nuevo_cliente" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="my-modal-title" aria-hidden="true">

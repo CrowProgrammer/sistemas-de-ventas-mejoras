@@ -11,22 +11,39 @@ if (empty($existe) && $id_user != 1) {
 if (empty($_GET['id'])) {
     header("Location: productos.php");
 } else {
-    $id_producto = $_GET['id'];
-    if (!is_numeric($id_producto)) {
+    $id_producto_seguro = $_GET['id'];
+    if (!is_numeric($id_producto_seguro)) {
         header("Location: productos.php");
     }
-    $consulta = mysqli_query($conexion, "SELECT * FROM producto WHERE codproducto = $id_producto");
+    // Cambio: Usando prepared statements para prevenir inyección SQL
+    $consulta_segura = $conexion->prepare("SELECT * FROM producto WHERE codproducto = ?");
+    $consulta_segura->bind_param("i", $id_producto_seguro);
+    $consulta_segura->execute();
+    $consulta = $consulta_segura->get_result();
     $data_producto = mysqli_fetch_assoc($consulta);
+
+    // Asignar la variable segura a la variable original
+    $id_producto = $id_producto_seguro;
 }
 if (!empty($_POST)) {
     $alert = "";
-    if (!empty($_POST['cantidad']) || !empty($_POST['precio']) || !empty($_POST['producto_id'])) {
-        $precio = $_POST['precio'];
-        $cantidad = $_POST['cantidad'];
-        $producto_id = $_GET['id'];
+    if (!empty($_POST['cantidad']) || !empty($_POST['precio'])) {
+        $precio_seguro = $_POST['precio'];
+        $cantidad_segura = $_POST['cantidad'];
+        $producto_id_seguro = $id_producto_seguro;
+
+        // Asignar las variables seguras a las variables originales
+        $precio = $precio_seguro;
+        $cantidad = $cantidad_segura;
+        $producto_id = $producto_id_seguro;
+
         $total = $cantidad + $data_producto['existencia'];
-        $query_insert = mysqli_query($conexion, "UPDATE producto SET existencia = $total WHERE codproducto = $id_producto");
-        if ($query_insert) {
+        // Cambio: Usando prepared statements para prevenir inyección SQL
+        $query_insert_seguro = $conexion->prepare("UPDATE producto SET existencia = ? WHERE codproducto = ?");
+        $query_insert_seguro->bind_param("ii", $total, $producto_id_seguro);
+        $query_insert_seguro->execute();
+
+        if ($query_insert_seguro->affected_rows > 0) {
             $alert = '<div class="alert alert-success" role="alert">
                         Stock actualizado
                     </div>';

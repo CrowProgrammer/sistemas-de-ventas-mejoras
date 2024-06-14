@@ -12,12 +12,28 @@ if (!empty($_POST)) {
     if (empty($_POST['nombre']) || empty($_POST['correo']) || empty($_POST['usuario'])) {
         $alert = '<div class="alert alert-danger" role="alert">Todo los campos son requeridos</div>';
     } else {
-        $idusuario = $_GET['id'];
-        $nombre = $_POST['nombre'];
-        $correo = $_POST['correo'];
-        $usuario = $_POST['usuario'];
-        $sql_update = mysqli_query($conexion, "UPDATE usuario SET nombre = '$nombre', correo = '$correo' , usuario = '$usuario' WHERE idusuario = $idusuario");
-        $alert = '<div class="alert alert-success" role="alert">Usuario Actualizado</div>';
+        // Asignar los parámetros POST a variables seguras
+        $idusuarioSeguro = $_GET['id'];
+        $nombreSeguro = $_POST['nombre'];
+        $correoSeguro = $_POST['correo'];
+        $usuarioSeguro = $_POST['usuario'];
+
+        // Cambio: Usando prepared statements para prevenir inyección SQL
+        $sql_update_seguro = $conexion->prepare("UPDATE usuario SET nombre = ?, correo = ?, usuario = ? WHERE idusuario = ?");
+        $sql_update_seguro->bind_param("sssi", $nombreSeguro, $correoSeguro, $usuarioSeguro, $idusuarioSeguro);
+        $sql_update_seguro->execute();
+
+        // Asignar las variables seguras a las variables originales
+        $idusuario = $idusuarioSeguro;
+        $nombre = $nombreSeguro;
+        $correo = $correoSeguro;
+        $usuario = $usuarioSeguro;
+
+        if ($sql_update_seguro->affected_rows > 0) {
+            $alert = '<div class="alert alert-success" role="alert">Usuario Actualizado</div>';
+        } else {
+            $alert = '<div class="alert alert-danger" role="alert">Error al Actualizar el Usuario</div>';
+        }
     }
 }
 
@@ -26,14 +42,25 @@ if (!empty($_POST)) {
 if (empty($_REQUEST['id'])) {
     header("Location: usuarios.php");
 }
-$idusuario = $_REQUEST['id'];
-$sql = mysqli_query($conexion, "SELECT * FROM usuario WHERE idusuario = $idusuario");
+
+// Asignar el parámetro REQUEST a una variable segura
+$idusuarioSeguro = $_REQUEST['id'];
+
+// Cambio: Usando prepared statements para prevenir inyección SQL
+$sql_seguro = $conexion->prepare("SELECT * FROM usuario WHERE idusuario = ?");
+$sql_seguro->bind_param("i", $idusuarioSeguro);
+$sql_seguro->execute();
+$sql = $sql_seguro->get_result();
+
+// Asignar la variable segura a la variable original
+$idusuario = $idusuarioSeguro;
+
 $result_sql = mysqli_num_rows($sql);
 if ($result_sql == 0) {
     header("Location: usuarios.php");
 } else {
     if ($data = mysqli_fetch_array($sql)) {
-        $idcliente = $data['idusuario'];
+        $idusuario = $data['idusuario'];
         $nombre = $data['nombre'];
         $correo = $data['correo'];
         $usuario = $data['usuario'];
@@ -53,17 +80,14 @@ if ($result_sql == 0) {
                     <div class="form-group">
                         <label for="nombre">Nombre</label>
                         <input type="text" placeholder="Ingrese nombre" class="form-control" name="nombre" id="nombre" value="<?php echo $nombre; ?>">
-
                     </div>
                     <div class="form-group">
                         <label for="correo">Correo</label>
                         <input type="text" placeholder="Ingrese correo" class="form-control" name="correo" id="correo" value="<?php echo $correo; ?>">
-
                     </div>
                     <div class="form-group">
                         <label for="usuario">Usuario</label>
                         <input type="text" placeholder="Ingrese usuario" class="form-control" name="usuario" id="usuario" value="<?php echo $usuario; ?>">
-
                     </div>
                     <button type="submit" class="btn btn-primary"><i class="fas fa-user-edit"></i></button>
                     <a href="usuarios.php" class="btn btn-danger">Atras</a>
