@@ -13,15 +13,21 @@ if (!empty($_POST)) {
         $alert = '<div class="alert alert-danger" role="alert">Todo los campos son requeridos</div>';
     } else {
         // Asignar los parámetros POST a variables seguras
-        $idclienteSeguro = htmlspecialchars($_POST['id'], ENT_QUOTES, 'UTF-8');
-        $nombreSeguro = htmlspecialchars($_POST['nombre'], ENT_QUOTES, 'UTF-8');
-        $telefonoSeguro = htmlspecialchars($_POST['telefono'], ENT_QUOTES, 'UTF-8');
-        $direccionSeguro = htmlspecialchars($_POST['direccion'], ENT_QUOTES, 'UTF-8');
+        $idclienteSeguro = $_POST['id'];
+        $nombreSeguro = $_POST['nombre'];
+        $telefonoSeguro = $_POST['telefono'];
+        $direccionSeguro = $_POST['direccion'];
 
         // Cambio: Usando prepared statements para prevenir inyección SQL
         $sql_update_seguro = $conexion->prepare("UPDATE cliente SET nombre = ?, telefono = ?, direccion = ? WHERE idcliente = ?");
         $sql_update_seguro->bind_param("sssi", $nombreSeguro, $telefonoSeguro, $direccionSeguro, $idclienteSeguro);
         $sql_update_seguro->execute();
+
+        // Asignar las variables seguras a las variables originales
+        $idcliente = $idclienteSeguro;
+        $nombre = htmlspecialchars($nombreSeguro, ENT_QUOTES, 'UTF-8');
+        $telefono = htmlspecialchars($telefonoSeguro, ENT_QUOTES, 'UTF-8');
+        $direccion = htmlspecialchars($direccionSeguro, ENT_QUOTES, 'UTF-8');
 
         if ($sql_update_seguro->affected_rows > 0) {
             $alert = '<div class="alert alert-success" role="alert">Cliente Actualizado correctamente</div>';
@@ -37,22 +43,27 @@ if (empty($_REQUEST['id'])) {
 }
 
 // Asignar el parámetro REQUEST a una variable segura
-$idclienteSeguro = htmlspecialchars($_REQUEST['id'], ENT_QUOTES, 'UTF-8');
+$idclienteSeguro = $_REQUEST['id'];
 
 // Cambio: Usando prepared statements para prevenir inyección SQL
 $sql_seguro = $conexion->prepare("SELECT * FROM cliente WHERE idcliente = ?");
 $sql_seguro->bind_param("i", $idclienteSeguro);
 $sql_seguro->execute();
-$result = $sql_seguro->get_result();
+$sql = $sql_seguro->get_result();
 
-if ($result->num_rows == 0) {
+// Asignar la variable segura a la variable original
+$idcliente = $idclienteSeguro;
+
+$result_sql = mysqli_num_rows($sql);
+if ($result_sql == 0) {
     header("Location: clientes.php");
 } else {
-    $data = $result->fetch_assoc();
-    $idcliente = $data['idcliente'];
-    $nombre = htmlspecialchars($data['nombre'], ENT_QUOTES, 'UTF-8');
-    $telefono = htmlspecialchars($data['telefono'], ENT_QUOTES, 'UTF-8');
-    $direccion = htmlspecialchars($data['direccion'], ENT_QUOTES, 'UTF-8');
+    if ($data = mysqli_fetch_array($sql)) {
+        $idcliente = $data['idcliente'];
+        $nombre = htmlspecialchars($data['nombre'], ENT_QUOTES, 'UTF-8');
+        $telefono = htmlspecialchars($data['telefono'], ENT_QUOTES, 'UTF-8');
+        $direccion = htmlspecialchars($data['direccion'], ENT_QUOTES, 'UTF-8');
+    }
 }
 ?>
 <!-- Begin Page Content -->
@@ -67,7 +78,7 @@ if ($result->num_rows == 0) {
                 <div class="card-body">
                     <form class="" action="" method="post">
                         <?php echo isset($alert) ? $alert : ''; ?>
-                        <input type="hidden" name="id" value="<?php echo $idcliente; ?>">
+                        <input type="hidden" name="id" value="<?php echo htmlspecialchars($idcliente, ENT_QUOTES, 'UTF-8'); ?>">
                         <div class="form-group">
                             <label for="nombre">Nombre</label>
                             <input type="text" placeholder="Ingrese Nombre" name="nombre" class="form-control" id="nombre" value="<?php echo $nombre; ?>">
