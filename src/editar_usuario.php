@@ -76,18 +76,18 @@ if ($result_sql == 0) {
             <div class="card-body">
                 <form class="" action="" method="post">
                     <?php echo isset($alert) ? $alert : ''; ?>
-                    <input type="hidden" name="id" value="<?php echo $idusuario; ?>">
+                    <input type="hidden" name="id" value="<?php echo htmlspecialchars($idusuario, ENT_QUOTES, 'UTF-8'); ?>">
                     <div class="form-group">
                         <label for="nombre">Nombre</label>
-                        <input type="text" placeholder="Ingrese nombre" class="form-control" name="nombre" id="nombre" value="<?php echo $nombre; ?>">
+                        <input type="text" placeholder="Ingrese nombre" class="form-control" name="nombre" id="nombre" value="<?php echo htmlspecialchars($nombre, ENT_QUOTES, 'UTF-8'); ?>">
                     </div>
                     <div class="form-group">
                         <label for="correo">Correo</label>
-                        <input type="text" placeholder="Ingrese correo" class="form-control" name="correo" id="correo" value="<?php echo $correo; ?>">
+                        <input type="text" placeholder="Ingrese correo" class="form-control" name="correo" id="correo" value="<?php echo htmlspecialchars($correo, ENT_QUOTES, 'UTF-8'); ?>">
                     </div>
                     <div class="form-group">
                         <label for="usuario">Usuario</label>
-                        <input type="text" placeholder="Ingrese usuario" class="form-control" name="usuario" id="usuario" value="<?php echo $usuario; ?>">
+                        <input type="text" placeholder="Ingrese usuario" class="form-control" name="usuario" id="usuario" value="<?php echo htmlspecialchars($usuario, ENT_QUOTES, 'UTF-8'); ?>">
                     </div>
                     <button type="submit" class="btn btn-primary"><i class="fas fa-user-edit"></i></button>
                     <a href="usuarios.php" class="btn btn-danger">Atras</a>
