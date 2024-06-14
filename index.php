@@ -17,21 +17,27 @@ if (!empty($_SESSION['active'])) {
             mysqli_close($conexion);
             $resultado = mysqli_num_rows($query);
             
-            //capchap
+            // Captcha
             $ip = $_SERVER["REMOTE_ADDR"];
             $captcha = $_POST['g-recaptcha-response'];
             $secretKey = '6LcSEv4oAAAAAH8j2FET1I798WrCjl6-7bThNVV6';
-            
-            $response = file_get_contents("https://www.google.com/recaptcha/api/siteverify?secret={$secretKey}&response={$captcha}&remoteip={$ip}");
 
-            
+            // Cambio: Usar cURL en lugar de file_get_contents para prevenir SSRF y Path Traversal
+            $ch = curl_init();
+            curl_setopt($ch, CURLOPT_URL, "https://www.google.com/recaptcha/api/siteverify");
+            curl_setopt($ch, CURLOPT_POST, 1);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query(array('secret' => $secretKey, 'response' => $captcha, 'remoteip' => $ip)));
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            $response = curl_exec($ch);
+            curl_close($ch);
+
             $atributos = json_decode($response, TRUE);
             
             if (!$atributos['success']) {
                 $errors[] = 'Verifica el captcha';
             }
             
-            //fin
+            // Fin captcha
             
             if ($resultado > 0 && empty($errors)) {
                 $dato = mysqli_fetch_array($query);
@@ -42,7 +48,7 @@ if (!empty($_SESSION['active'])) {
                 
                 header('location: src/');
             } else {
-                $alert = '<div class="alert alert-danger" role="alert">Usuario, Contraseña o Captchap Incorrecta</div>';
+                $alert = '<div class="alert alert-danger" role="alert">Usuario, Contraseña o Captcha Incorrecta</div>';
                 session_destroy();
             }
         }
@@ -58,7 +64,7 @@ if (!empty($_SESSION['active'])) {
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
     <meta name="description" content="" />
     <meta name="author" content="" />
-    <title>Iniciar Sessión</title>
+    <title>Iniciar Sesión</title>
     <link href="assets/css/styles.css" rel="stylesheet" />
     <script src="assets/js/all.min.js" crossorigin="anonymous"></script>
     <script src='https://www.google.com/recaptcha/api.js'></script>
@@ -74,7 +80,7 @@ if (!empty($_SESSION['active'])) {
                             <div class="card shadow-lg border-0 rounded-lg mt-5">
                                 <div class="card-header text-center">
                                     <img class="img-thumbnail" src="assets/img/logo.png" width="100">
-                                    <h3 class="font-weight-light my-4">Iniciar Sessión</h3>
+                                    <h3 class="font-weight-light my-4">Iniciar Sesión</h3>
                                 </div>
                                 <div class="card-body">
                                     <form action="" method="POST">
@@ -86,9 +92,7 @@ if (!empty($_SESSION['active'])) {
                                             <label class="small mb-1" for="clave"><i class="fas fa-key"></i> Contraseña</label>
                                             <input class="form-control py-4" id="clave" name="clave" type="password" placeholder="Ingrese Contraseña" required />
                                         </div>
-                                        <div class="alert alert-danger text-center d-none" id="alerta" role="alert">
-
-                                        </div>
+                                        <div class="alert alert-danger text-center d-none" id="alerta" role="alert"></div>
                                         
                                         <div>
                                             <div class="g-recaptcha" data-sitekey="6LcSEv4oAAAAADKYJpi3vTBXS2r7XiYC66ikkvFv"></div>

@@ -60,9 +60,9 @@ if ($result_sql == 0) {
 } else {
     if ($data = mysqli_fetch_array($sql)) {
         $idcliente = $data['idcliente'];
-        $nombre = $data['nombre'];
-        $telefono = $data['telefono'];
-        $direccion = $data['direccion'];
+        $nombre = htmlspecialchars($data['nombre'], ENT_QUOTES, 'UTF-8');
+        $telefono = htmlspecialchars($data['telefono'], ENT_QUOTES, 'UTF-8');
+        $direccion = htmlspecialchars($data['direccion'], ENT_QUOTES, 'UTF-8');
     }
 }
 ?>

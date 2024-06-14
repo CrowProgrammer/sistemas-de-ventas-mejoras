@@ -7,10 +7,19 @@ $sql = mysqli_query($conexion, "SELECT p.*, d.* FROM permisos p INNER JOIN detal
 $existe = mysqli_fetch_all($sql);
 if (empty($existe) && $id_user != 1) {
     header("Location: permisos.php");
+    exit;
 }
 if (!empty($_GET['id'])) {
     $id = $_GET['id'];
-    $query_delete = mysqli_query($conexion, "UPDATE cliente SET estado = 0 WHERE idcliente = $id");
+
+    // Cambio: Usando prepared statements para prevenir inyección SQL
+    $stmt = $conexion->prepare("UPDATE cliente SET estado = 0 WHERE idcliente = ?");
+    $stmt->bind_param("i", $id);
+    $stmt->execute();
+    $stmt->close();
     mysqli_close($conexion);
+    
     header("Location: clientes.php");
+    exit;
 }
+?>
