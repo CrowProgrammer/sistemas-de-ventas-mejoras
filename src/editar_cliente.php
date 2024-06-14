@@ -13,21 +13,15 @@ if (!empty($_POST)) {
         $alert = '<div class="alert alert-danger" role="alert">Todo los campos son requeridos</div>';
     } else {
         // Asignar los parámetros POST a variables seguras
-        $idclienteSeguro = $_POST['id'];
-        $nombreSeguro = $_POST['nombre'];
-        $telefonoSeguro = $_POST['telefono'];
-        $direccionSeguro = $_POST['direccion'];
+        $idclienteSeguro = htmlspecialchars($_POST['id'], ENT_QUOTES, 'UTF-8');
+        $nombreSeguro = htmlspecialchars($_POST['nombre'], ENT_QUOTES, 'UTF-8');
+        $telefonoSeguro = htmlspecialchars($_POST['telefono'], ENT_QUOTES, 'UTF-8');
+        $direccionSeguro = htmlspecialchars($_POST['direccion'], ENT_QUOTES, 'UTF-8');
 
         // Cambio: Usando prepared statements para prevenir inyección SQL
         $sql_update_seguro = $conexion->prepare("UPDATE cliente SET nombre = ?, telefono = ?, direccion = ? WHERE idcliente = ?");
         $sql_update_seguro->bind_param("sssi", $nombreSeguro, $telefonoSeguro, $direccionSeguro, $idclienteSeguro);
         $sql_update_seguro->execute();
-
-        // Asignar las variables seguras a las variables originales
-        $idcliente = $idclienteSeguro;
-        $nombre = $nombreSeguro;
-        $telefono = $telefonoSeguro;
-        $direccion = $direccionSeguro;
 
         if ($sql_update_seguro->affected_rows > 0) {
             $alert = '<div class="alert alert-success" role="alert">Cliente Actualizado correctamente</div>';
@@ -43,27 +37,22 @@ if (empty($_REQUEST['id'])) {
 }
 
 // Asignar el parámetro REQUEST a una variable segura
-$idclienteSeguro = $_REQUEST['id'];
+$idclienteSeguro = htmlspecialchars($_REQUEST['id'], ENT_QUOTES, 'UTF-8');
 
 // Cambio: Usando prepared statements para prevenir inyección SQL
 $sql_seguro = $conexion->prepare("SELECT * FROM cliente WHERE idcliente = ?");
 $sql_seguro->bind_param("i", $idclienteSeguro);
 $sql_seguro->execute();
-$sql = $sql_seguro->get_result();
+$result = $sql_seguro->get_result();
 
-// Asignar la variable segura a la variable original
-$idcliente = $idclienteSeguro;
-
-$result_sql = mysqli_num_rows($sql);
-if ($result_sql == 0) {
+if ($result->num_rows == 0) {
     header("Location: clientes.php");
 } else {
-    if ($data = mysqli_fetch_array($sql)) {
-        $idcliente = $data['idcliente'];
-        $nombre = htmlspecialchars($data['nombre'], ENT_QUOTES, 'UTF-8');
-        $telefono = htmlspecialchars($data['telefono'], ENT_QUOTES, 'UTF-8');
-        $direccion = htmlspecialchars($data['direccion'], ENT_QUOTES, 'UTF-8');
-    }
+    $data = $result->fetch_assoc();
+    $idcliente = $data['idcliente'];
+    $nombre = htmlspecialchars($data['nombre'], ENT_QUOTES, 'UTF-8');
+    $telefono = htmlspecialchars($data['telefono'], ENT_QUOTES, 'UTF-8');
+    $direccion = htmlspecialchars($data['direccion'], ENT_QUOTES, 'UTF-8');
 }
 ?>
 <!-- Begin Page Content -->
